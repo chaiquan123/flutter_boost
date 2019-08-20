@@ -41,6 +41,10 @@ NS_ASSUME_NONNULL_BEGIN
     
 - (void)flutterViewDidAppear:(NSDictionary *)params;
 
+- (CGFloat)getFlutterSnapshotWidth:(CGFloat)flutterWidth;
+
+- (CGFloat)getFlutterSnapshotHeight:(CGFloat)flutterHeight;
+
 @end
 
 NS_ASSUME_NONNULL_END

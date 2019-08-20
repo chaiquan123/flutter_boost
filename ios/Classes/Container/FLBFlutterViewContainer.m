@@ -1,18 +1,18 @@
 /*
  * The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2019 Alibaba Group
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -39,7 +39,6 @@
 @property (nonatomic,strong,readwrite) NSDictionary *params;
 @property (nonatomic,strong) UIImageView *screenShotView;
 @property (nonatomic,assign) long long identifier;
-@property (nonatomic,assign) BOOL interactiveGestureActive;
 @end
 
 @implementation FLBFlutterViewContainer
@@ -86,31 +85,15 @@ static NSUInteger kInstanceCounter = 0;
     return @(_identifier).stringValue;
 }
 
-- (void)_setup
-{
-    static long long sCounter = 0;
-    _identifier = sCounter++;
-    [self.class instanceCounterIncrease];
-    
-    SEL sel = @selector(flutterViewDidShow:);
-    NSString *notiName = @"flutter_boost_container_showed";
-    [NSNotificationCenter.defaultCenter addObserver:self
-                                           selector:sel
-                                               name:notiName
-                                             object:nil];
-}
-
 - (instancetype)init
 {
     if(self = [super init]){
-        [self _setup];
-    }
-    return self;
-}
-
-- (instancetype)initWithCoder:(NSCoder *)aDecoder{
-    if (self = [super initWithCoder: aDecoder]) {
-        [self _setup];
+        static long long sCounter = 0;
+        _identifier = sCounter++;
+        [self.class instanceCounterIncrease];
+        [NSNotificationCenter.defaultCenter addObserver:self
+                                               selector:@selector(flutterViewDidShow:) name:@"flutter_boost_container_showed"
+                                                 object:nil];
     }
     return self;
 }
@@ -122,7 +105,7 @@ static NSUInteger kInstanceCounter = 0;
 
 - (void)flutterViewDidShow:(NSNotification *)notification
 {
-     __weak typeof(self) weakSelf = self;
+    __weak typeof(self) weakSelf = self;
     if([notification.object isEqual: self.uniqueIDString]){
         dispatch_async(dispatch_get_main_queue(), ^{
             [weakSelf showFlutterView];
@@ -141,7 +124,7 @@ static NSUInteger kInstanceCounter = 0;
     [Service_NavigationService willDeallocPageContainer:^(NSNumber *r) {}
                                                pageName:_name params:_params
                                                uniqueId:[self uniqueIDString]];
-
+    
     [[FLBStackCache sharedInstance] remove:self.uniqueIDString];
     [[FLBFlutterApplication sharedApplication] removeViewController:self];
     
@@ -164,19 +147,19 @@ static NSUInteger kInstanceCounter = 0;
 {
     CGFloat scale = 1;
     switch ([FLBMemoryInspector.sharedInstance currentCondition]) {
-        case FLBMemoryConditionNormal:
+            case FLBMemoryConditionNormal:
             scale = 2;
             break;
-        case FLBMemoryConditionLowMemory:
+            case FLBMemoryConditionLowMemory:
             scale = 1;
             break;
-        case FLBMemoryConditionExtremelyLow:
+            case FLBMemoryConditionExtremelyLow:
             scale = 0.75;
             break;
-        case FLBMemoryConditionAboutToDie:
+            case FLBMemoryConditionAboutToDie:
             return [UIImage new];
             break;
-        case FLBMemoryConditionUnknown:
+            case FLBMemoryConditionUnknown:
             if([[FLBMemoryInspector sharedInstance] smallMemoryDevice]){
                 scale = 1;
             }else{
@@ -188,8 +171,7 @@ static NSUInteger kInstanceCounter = 0;
     self.screenShotView.opaque = YES;
     
     CGRect flutterBounds = self.view.bounds;
-    CGSize snapshotSize = CGSizeMake(flutterBounds.size.width ,
-                                     flutterBounds.size.height);
+    CGSize snapshotSize = CGSizeMake([self getFlutterSnapshotWidth:flutterBounds.size.width],[self getFlutterSnapshotHeight:flutterBounds.size.height]);
     UIGraphicsBeginImageContextWithOptions(snapshotSize, NO, scale);
     
     [self.view drawViewHierarchyInRect:flutterBounds
@@ -200,6 +182,17 @@ static NSUInteger kInstanceCounter = 0;
     
     return snapImage;
 }
+
+
+- (CGFloat)getFlutterSnapshotWidth:(CGFloat)flutterWidth{
+    return flutterWidth;
+}
+
+- (CGFloat)getFlutterSnapshotHeight:(CGFloat)flutterHeight{
+    return flutterHeight;
+}
+
+
 
 - (void)saveScreenShot
 {
@@ -233,16 +226,16 @@ static NSUInteger kInstanceCounter = 0;
     [FLUTTER_VC willMoveToParentViewController:nil];
     [FLUTTER_VC removeFromParentViewController];
     [FLUTTER_VC didMoveToParentViewController:nil];
-   
+    
     [FLUTTER_VC willMoveToParentViewController:self];
     FLUTTER_VIEW.frame = self.view.bounds;
     
     if(!self.screenShotView.image){
-         [self.view addSubview: FLUTTER_VIEW];
+        [self.view addSubview: FLUTTER_VIEW];
     }else{
         [self.view insertSubview:FLUTTER_VIEW belowSubview:self.screenShotView];
     }
-
+    
     [self addChildViewController:FLUTTER_VC];
     [FLUTTER_VC didMoveToParentViewController:self];
 }
@@ -250,7 +243,7 @@ static NSUInteger kInstanceCounter = 0;
 - (BOOL)showSnapShotVew
 {
     self.screenShotView.image = [self getSavedScreenShot];
-   
+    
     if([self isFlutterViewAttatched]){
         NSUInteger fIdx = [self.view.subviews indexOfObject:FLUTTER_VIEW];
         NSUInteger sIdx = [self.view.subviews indexOfObject:self.screenShotView];
@@ -258,8 +251,6 @@ static NSUInteger kInstanceCounter = 0;
             [self.view insertSubview:FLUTTER_VIEW
                              atIndex:0];
         }
-    }else{
-        
     }
     
     return self.screenShotView.image != nil;
@@ -280,11 +271,6 @@ static NSUInteger kInstanceCounter = 0;
     }
     
     [self clearCurrentScreenShotImage];
-    
-    //Invalidate obsolete screenshot.
-    [FLBStackCache.sharedInstance invalidate:self.uniqueIDString];
-    [Service_NavigationService canPopPageName:_name params:_params
-     uniqueId:[self uniqueIDString]];
 }
 
 #pragma mark - Life circle methods
@@ -297,15 +283,11 @@ static NSUInteger kInstanceCounter = 0;
 
 - (void)viewWillAppear:(BOOL)animated
 {
-    if(self.navigationController.interactivePopGestureRecognizer.state == UIGestureRecognizerStateBegan){
-        self.interactiveGestureActive = true;
-    }
-    
     [[FLBFlutterApplication sharedApplication] resume];
     //For new page we should attach flutter view in view will appear
     //for better performance.
     if(![[FLBFlutterApplication sharedApplication] contains:self]){
-         [self attatchFlutterView];
+        [self attatchFlutterView];
     }
     
     [self showSnapShotVew];
@@ -327,7 +309,7 @@ static NSUInteger kInstanceCounter = 0;
 - (void)viewDidAppear:(BOOL)animated
 {
     [[FLBFlutterApplication sharedApplication] resume];
-   
+    
     //Ensure flutter view is attached.
     [self attatchFlutterView];
     
@@ -339,36 +321,28 @@ static NSUInteger kInstanceCounter = 0;
     [[FLBFlutterApplication sharedApplication] addUniqueViewController:self];
     
     [super viewDidAppear:animated];
- 
+    
     __weak typeof(self) weakSelf = self;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
                                  (int64_t)(2 * NSEC_PER_SEC)),
                    dispatch_get_main_queue(),^{
-                       if (weakSelf.isViewLoaded && weakSelf.view.window) {
-                           // viewController is visible
-                            [weakSelf showFlutterView];
-                       }
+                       [weakSelf showFlutterView];
                    });
-    
-    self.interactiveGestureActive = NO;
 }
 
 - (void)viewWillDisappear:(BOOL)animated
 {
     //is top.
     if([FLUTTER_APP isTop:self.uniqueIDString]
-       && self.navigationController.interactivePopGestureRecognizer.state != UIGestureRecognizerStateBegan
-       && !self.interactiveGestureActive){
+       && self.navigationController.interactivePopGestureRecognizer.state != UIGestureRecognizerStateBegan){
         [self saveScreenShot];
     }
     
-    self.interactiveGestureActive = NO;
-   
     self.screenShotView.image = [self getSavedScreenShot];
     if(self.screenShotView.image){
         [self.view bringSubviewToFront:self.screenShotView];
     }
-   
+    
     [Service_NavigationService willDisappearPageContainer:^(NSNumber *result) {}
                                                  pageName:_name
                                                    params:_params
@@ -386,9 +360,8 @@ static NSUInteger kInstanceCounter = 0;
     
     [self clearCurrentScreenShotImage];
     [super viewDidDisappear:animated];
-
+    
     [FLUTTER_APP inactive];
-    self.interactiveGestureActive = NO;
 }
 
 #pragma mark - FLBViewControllerResultHandler
