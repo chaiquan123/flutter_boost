@@ -228,7 +228,7 @@ static NSUInteger kInstanceCounter = 0;
     [FLUTTER_VC didMoveToParentViewController:nil];
     
     [FLUTTER_VC willMoveToParentViewController:self];
-    FLUTTER_VIEW.frame = self.view.bounds;
+    FLUTTER_VIEW.frame = UIScreen.mainScreen.bounds;
     
     if(!self.screenShotView.image){
         [self.view addSubview: FLUTTER_VIEW];
