@@ -1,18 +1,18 @@
 /*
  * The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2019 Alibaba Group
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -24,11 +24,14 @@
 package com.taobao.idlefish.flutterboost.containers;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -131,11 +134,25 @@ abstract public class FlutterViewStub extends FrameLayout {
                 ((ViewGroup) flutterView.getParent()).removeView(flutterView);
             }
 
-            mStub.addView(flutterView, new FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            mStub.addView(flutterView, new LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, getScreenHeight(getContext())));
         }
     }
 
+    public static int getScreenHeight(Context context) {
+        return getDisplayMetrics(context).heightPixels;
+    }
+
+    public static DisplayMetrics getDisplayMetrics(Context context) {
+        return context.getResources().getDisplayMetrics();
+    }
+
+    public static final float DENSITY = Resources.getSystem()
+            .getDisplayMetrics().density;
+
+    public static int dpToPx(int dpValue) {
+        return (int) (dpValue * DENSITY + 0.5f);
+    }
 
     public void detachFlutterView() {
         if (mStub.getChildCount() <= 0) return;
@@ -164,7 +181,7 @@ abstract public class FlutterViewStub extends FrameLayout {
                 }
             }
         };
-        sHandler.sendMessageDelayed(msg,18);
+        sHandler.sendMessageDelayed(msg, 18);
     }
 
     public void destroy() {
@@ -187,7 +204,7 @@ abstract public class FlutterViewStub extends FrameLayout {
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         params.gravity = Gravity.CENTER;
-        layout.addView(new ProgressBar(getContext()),params);
+        layout.addView(new ProgressBar(getContext()), params);
         return layout;
     }
 
